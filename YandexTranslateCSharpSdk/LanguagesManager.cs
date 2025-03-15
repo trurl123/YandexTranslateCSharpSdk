@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-#if !NETCORE
-using System.Web.Script.Serialization;
-#else
 using Newtonsoft.Json;
-#endif
 using System.Xml;
 
 namespace YandexTranslateCSharpSdk
@@ -37,13 +33,8 @@ namespace YandexTranslateCSharpSdk
         internal async Task<List<string>> GetLanguagesJsonAsync()
         {            
             string response = await PostDataAsync("https://translate.yandex.net/api/v1.5/tr.json/getLangs?", "application/json");
-#if NETCORE
             var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(response);
             var lang = JsonConvert.DeserializeObject<Dictionary<string, object>>(dict["langs"].ToString());
-#else
-            var dict = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(response);
-            var lang = dict["langs"] as Dictionary<string, object>;
-#endif
             return new List<string>(lang.Keys);           
         }
 

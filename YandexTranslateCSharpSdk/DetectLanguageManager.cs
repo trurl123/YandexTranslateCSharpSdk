@@ -4,12 +4,9 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-#if !NETCORE
-using System.Web.Script.Serialization;
-#else
 using Newtonsoft.Json;
-#endif
 using System.Xml;
+using Newtonsoft.Json;
 
 namespace YandexTranslateCSharpSdk
 {
@@ -39,11 +36,7 @@ namespace YandexTranslateCSharpSdk
         {
             string response = await PostDataAsync(text, "https://translate.yandex.net/api/v1.5/tr.json/detect?",
                 "application/json");
-#if NETCORE
             var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(response); 
-#else
-            var dict = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(response);
-#endif
             var lang = dict["lang"];
             return lang == null ? null : lang.ToString();
         }
