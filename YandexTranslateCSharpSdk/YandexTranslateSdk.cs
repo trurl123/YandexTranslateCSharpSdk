@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace YandexTranslateCSharpSdk
@@ -9,13 +10,13 @@ namespace YandexTranslateCSharpSdk
     /// </summary>
     public class YandexTranslateSdk
     {
-        private DetectLanguageManager detectManager = new DetectLanguageManager();
-        private LanguagesManager languagesManager = new LanguagesManager();
-        private TranslateManager translateManager = new TranslateManager();
+        private readonly DetectLanguageManager detectManager = new();
+        private readonly LanguagesManager languagesManager = new();
+        private readonly TranslateManager translateManager;
 
         private readonly Dictionary<string, string> supportedLanguages = 
-            new Dictionary<string, string>()
-        {
+            new()
+            {
             { "az", "Azerbaijan"},
             { "sq", "Albanian"},
             { "am", "Amharic"},
@@ -113,34 +114,28 @@ namespace YandexTranslateCSharpSdk
             { "sah", "Yakut"}
         };
 
+        public YandexTranslateSdk(string apiKey)
+        {
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                throw new ArgumentNullException(nameof(apiKey));
+            }
+            translateManager = new(apiKey);
+            this.apiKey = apiKey;
+        }
+
         /// <summary>
         /// API key. You need to set it before calling methods of SDK 
         /// </summary>
-        public string ApiKey { get; set; }
-
-        /// <summary>
-        /// JSON or XML 
-        /// </summary>
-        public bool IsJson { get; set; }
+        private readonly string apiKey;
 
         /// <summary>
         /// Automatically detect language by piece of text        
         /// </summary>
         public async Task<string> DetectLanguageAsync(string text)
         {
-            if (string.IsNullOrEmpty(ApiKey))
-            {
-                throw new YandexTranslateException("Empty API Key");
-            }
-            detectManager.ApiKey = ApiKey;
-            if (IsJson)
-            {
-                return await detectManager.DetectLanguageJsonAsync(text);
-            }
-            else
-            {
-                return await detectManager.DetectLanguageXmlAsync(text);
-            }
+            detectManager.ApiKey = apiKey;
+            return await detectManager.DetectLanguageJsonAsync(text);
         }
 
         /// <summary>
@@ -148,21 +143,14 @@ namespace YandexTranslateCSharpSdk
         /// </summary>
         public async Task<Dictionary<string,string>> GetLanguagesAsync()
         {
-            if (string.IsNullOrEmpty(ApiKey))
+            if (string.IsNullOrEmpty(apiKey))
             {
                 throw new YandexTranslateException("Empty API Key");
             }
-            languagesManager.ApiKey = ApiKey;
+            languagesManager.ApiKey = apiKey;
             var languageCodes = new List<string>();
             var languages = new Dictionary<string, string>();
-            if (IsJson)
-            {
-                languageCodes = await languagesManager.GetLanguagesJsonAsync();
-            }
-            else
-            {
-                languageCodes = await languagesManager.GetLanguagesXmlAsync();
-            }
+            languageCodes = await languagesManager.GetLanguagesJsonAsync();
             foreach(var code in languageCodes)
             {
                 if (supportedLanguages.ContainsKey(code))
@@ -180,22 +168,13 @@ namespace YandexTranslateCSharpSdk
         /// <summary>
         /// Translate given text in the given direction
         /// </summary>
-        public async Task<string> TranslateTextAsync(string text, string direction)
+        public async Task<string[]> TranslateTextAsync(string[] texts, string source, string target)
         {
-            if (string.IsNullOrEmpty(ApiKey))
+            if (string.IsNullOrEmpty(apiKey))
             {
                 throw new YandexTranslateException("Empty API Key");
             }
-            translateManager.ApiKey = ApiKey;
-            if (IsJson)
-            {
-                return await translateManager.TranslateTextJsonAsync(text, direction);
-            }
-            else
-            {
-                return await translateManager.TranslateTextXmlAsync(text, direction);
-            }
+            return await translateManager.TranslateTextJsonAsync(texts, source, target);
         }      
-
     }
 }
